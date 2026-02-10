@@ -5,13 +5,13 @@
  * 
  * This script manages the roulette wheel's behavior, including spinning to a specific number and determining the outcome of a spin. 
  * It uses an animation curve to control the spin's acceleration and deceleration, ensuring a smooth and visually appealing spin. 
+ * The correct number settles at 12 o'clock position in local rotation.
  * 
  * Notes:
  * The wheel layout is based on the American roulette configuration for now, with -1 representing "00".
- * It works like a wheel of fortune for now, target number always lands on top.
  * 
  * Todo:
- * Add ball animation and connect it here.
+ * MAke ball animation more interesting.
  * Add european variation, different pocket per angle and wheel texture.
  * Add sound effects.
  * 
@@ -25,14 +25,17 @@ using UnityEngine;
 public class RouletteWheel : MonoBehaviour
 {
     [SerializeField] private bool debugMode;
+
     [SerializeField] private Transform wheelTransform;
     [SerializeField] private Transform handleTransform;
+    [SerializeField] private Transform rouletteContainer;
 
     [SerializeField] private AnimationCurve spinCurve;
     [SerializeField] private float spinDuration = 4f;
     [SerializeField] private int minExtraRotations = 4;
     [SerializeField] private int maxExtraRotations = 6;
 
+    // Track current pocket position (-2 indicates initial state)
     [SerializeField] private int currentIndex = -2;
 
 
@@ -57,34 +60,19 @@ public class RouletteWheel : MonoBehaviour
     public IEnumerator SpinToNumber(int targetNumber)
     {
         int targetIndex = Array.IndexOf(wheelLayout, targetNumber);
-        int pocketsToSpin;
-
-        if (currentIndex == -2)
-        {
-            pocketsToSpin = targetIndex;
-        }
-        else if (targetIndex > currentIndex)
-        {
-            LogDebug("Target index is in front of new index");
-            pocketsToSpin = targetIndex - currentIndex;
-        }
-        else // if (targetIndex <= currentIndex)
-        {
-            LogDebug("Target index before new index");
-
-            pocketsToSpin = wheelLayout.Length - (currentIndex - targetIndex);
-        }
-
-        currentIndex = targetIndex;
-
-        float targetAngle = pocketsToSpin * DEGREES_PER_POCKET;
-        LogDebug($"Wheel needs to spin {targetAngle} degrees");
-
+        int pocketsToSpin = CalculatePocketsToSpin(targetIndex);
 
         int extraRotations = UnityEngine.Random.Range(minExtraRotations, maxExtraRotations);
-        float totalRotation = targetAngle /* + (360f * extraRotations)*/;
+        float extraRotationDegrees = 360f * extraRotations;
 
-        float startRotation = wheelTransform.eulerAngles.y;
+        float baseDegrees = pocketsToSpin * DEGREES_PER_POCKET;
+        float totalRotation = baseDegrees + extraRotationDegrees;
+
+        float randomContainerOffset = UnityEngine.Random.Range(0f, 360f);
+
+        float startWheelRotation = wheelTransform.localEulerAngles.y;
+        float startContainerRotation = rouletteContainer.eulerAngles.y;
+
 
         float elapsedTime = 0f;
         while (elapsedTime < spinDuration)
@@ -93,15 +81,42 @@ public class RouletteWheel : MonoBehaviour
             float t = elapsedTime / spinDuration;
 
             float curveValue = spinCurve.Evaluate(t);
-            float currentRotation = startRotation - (totalRotation * curveValue);
+            float currentRotation = startWheelRotation - (totalRotation * curveValue);
 
-            wheelTransform.rotation = Quaternion.Euler(0f, currentRotation, 0f);
-            handleTransform.rotation = wheelTransform.rotation;
+            wheelTransform.localRotation = Quaternion.Euler(0f, currentRotation, 0f);
+            handleTransform.localRotation = wheelTransform.localRotation;
+
+            float currentContainerRotation = startContainerRotation + (randomContainerOffset * curveValue);
+            rouletteContainer.rotation = Quaternion.Euler(0f, currentContainerRotation, 0f);
+
             yield return null;
         }
-        wheelTransform.rotation = Quaternion.Euler(0f, startRotation - totalRotation, 0f);
-        handleTransform.rotation = wheelTransform.rotation;
+        wheelTransform.localRotation = Quaternion.Euler(0f, startWheelRotation - totalRotation, 0f);
+        handleTransform.localRotation = wheelTransform.localRotation;
 
+        currentIndex = targetIndex;
+
+    }
+
+    private int CalculatePocketsToSpin(int targetIndex)
+    {
+        // First spin - go directly to target
+        if (currentIndex == -2)
+        {
+            LogDebug("First spin - going directly to target");
+            return targetIndex;
+        }
+
+        // Target is ahead (clockwise) - spin forward
+        if (targetIndex > currentIndex)
+        {
+            LogDebug("Target is ahead");
+            return targetIndex - currentIndex;
+        }
+
+        // Target is behind - wrap around
+        LogDebug("Target is behind - wrapping around");
+        return TOTAL_POCKETS - (currentIndex - targetIndex);
     }
 
     public string GetNumberDisplayString(int number)
