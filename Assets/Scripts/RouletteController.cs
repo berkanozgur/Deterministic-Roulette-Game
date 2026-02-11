@@ -7,6 +7,7 @@
  * 
  * Todo: 
  * Add result tracking and statistics.
+ * Add summaries to methods
  * 
  */
 
@@ -20,6 +21,8 @@ public class RouletteController : MonoBehaviour
     [SerializeField] private bool debugMode = false;
 
     [SerializeField] private RouletteWheel rouletteWheel;
+    [SerializeField] private RouletteBall rouletteBall;
+
 
     [SerializeField] private Button spinButton;
     [SerializeField] private TMP_Text resultText;
@@ -100,8 +103,13 @@ public class RouletteController : MonoBehaviour
         spinButton.interactable = false;
         resultText.text = "Spinning...";
 
-        yield return StartCoroutine(rouletteWheel.SpinToNumber(outcome));
+        Coroutine wheelSpin = StartCoroutine(rouletteWheel.SpinToNumber(outcome));
+        Coroutine ballSpin = StartCoroutine(rouletteBall.Spin());
 
+        yield return wheelSpin;
+        yield return ballSpin;
+
+        // Small delay before showing result
         yield return new WaitForSeconds(0.5f);
 
         string displayNumber = rouletteWheel.GetNumberDisplayString(outcome);

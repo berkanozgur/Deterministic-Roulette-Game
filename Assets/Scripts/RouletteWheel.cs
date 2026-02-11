@@ -11,10 +11,9 @@
  * The wheel layout is based on the American roulette configuration for now, with -1 representing "00".
  * 
  * Todo:
- * MAke ball animation more interesting.
  * Add european variation, different pocket per angle and wheel texture.
  * Add sound effects.
- * 
+ * Add summaries to methods
  * 
  */
 
@@ -31,7 +30,11 @@ public class RouletteWheel : MonoBehaviour
     [SerializeField] private Transform rouletteContainer;
 
     [SerializeField] private AnimationCurve spinCurve;
+    [SerializeField] private AnimationCurve containerSpinCurve;
+    [SerializeField] private float containerSpinRandomMin = 1080f;
+    [SerializeField] private float containerSpinRandomMax = 1440f;
     [SerializeField] private float spinDuration = 4f;
+    [SerializeField] private float containerExtraSpinDuration = 1f;
     [SerializeField] private int minExtraRotations = 4;
     [SerializeField] private int maxExtraRotations = 6;
 
@@ -68,11 +71,9 @@ public class RouletteWheel : MonoBehaviour
         float baseDegrees = pocketsToSpin * DEGREES_PER_POCKET;
         float totalRotation = baseDegrees + extraRotationDegrees;
 
-        float randomContainerOffset = UnityEngine.Random.Range(0f, 360f);
-
         float startWheelRotation = wheelTransform.localEulerAngles.y;
-        float startContainerRotation = rouletteContainer.eulerAngles.y;
 
+        Coroutine containerRotation = StartCoroutine(SpinContainer());
 
         float elapsedTime = 0f;
         while (elapsedTime < spinDuration)
@@ -86,16 +87,42 @@ public class RouletteWheel : MonoBehaviour
             wheelTransform.localRotation = Quaternion.Euler(0f, currentRotation, 0f);
             handleTransform.localRotation = wheelTransform.localRotation;
 
-            float currentContainerRotation = startContainerRotation + (randomContainerOffset * curveValue);
-            rouletteContainer.rotation = Quaternion.Euler(0f, currentContainerRotation, 0f);
-
             yield return null;
         }
         wheelTransform.localRotation = Quaternion.Euler(0f, startWheelRotation - totalRotation, 0f);
         handleTransform.localRotation = wheelTransform.localRotation;
 
         currentIndex = targetIndex;
+        yield return containerRotation;
 
+    }
+
+    private IEnumerator SpinContainer()
+    {
+        float startContainerRotation = rouletteContainer.eulerAngles.y;
+
+        // Phase 1: Main spin (matches wheel spin duration)
+        float randomContainerOffset = UnityEngine.Random.Range(containerSpinRandomMin, containerSpinRandomMax);
+        float elapsedTime = 0f;
+        float containerSpinDuration = spinDuration + containerExtraSpinDuration;
+
+        while (elapsedTime < containerSpinDuration)
+        {
+            elapsedTime += Time.deltaTime;
+            float t = elapsedTime / containerSpinDuration;
+            float curveValue = spinCurve.Evaluate(t);
+
+            float currentContainerRotation = startContainerRotation - (randomContainerOffset * curveValue);
+            rouletteContainer.rotation = Quaternion.Euler(0f, currentContainerRotation, 0f);
+
+            yield return null;
+        }
+
+        // Final container position
+        rouletteContainer.rotation = Quaternion.Euler(0f, startContainerRotation - randomContainerOffset, 0f);
+
+
+        LogDebug($"Container smoothing complete {randomContainerOffset}");
     }
 
     private int CalculatePocketsToSpin(int targetIndex)

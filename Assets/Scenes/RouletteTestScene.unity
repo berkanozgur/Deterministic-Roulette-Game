@@ -1541,14 +1541,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 905528295}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0, y: 0.015794551, z: 0, w: 0.9998753}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1295973921}
   m_Father: {fileID: 1654573759}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 1.81, z: 0}
 --- !u!1 &1168519199
 GameObject:
   m_ObjectHideFlags: 0
@@ -1601,6 +1601,7 @@ GameObject:
   - component: {fileID: 1295973920}
   - component: {fileID: 1295973919}
   - component: {fileID: 1295973918}
+  - component: {fileID: 1295973922}
   m_Layer: 0
   m_Name: Ball
   m_TagString: Untagged
@@ -1694,12 +1695,151 @@ Transform:
   m_GameObject: {fileID: 1295973917}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.05000019, y: 0.07999956, z: 5.3999996}
-  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_LocalPosition: {x: 0, y: 0.5, z: 7.3}
+  m_LocalScale: {x: 0.6, y: 0.6, z: 0.6}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 905528296}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1295973922
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1295973917}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ecb3aed058a845845bfe0ccb6c5665e3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RouletteBall
+  debugMode: 1
+  ballTransform: {fileID: 1295973921}
+  wheelCenter: {fileID: 905528296}
+  rimRadius: 7.3
+  pocketRadius: 5.5
+  ballHeight: 0.5
+  spinDuration: 8
+  settlingDuration: 1
+  minBallRotations: 14
+  maxBallRotations: 16
+  radiusCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0.0030274773
+      outSlope: 0.0030274773
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.6102733
+    - serializedVersion: 3
+      time: 0.8714124
+      value: 0.012606573
+      inSlope: 0.089679584
+      outSlope: 0.089679584
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.05807078
+    - serializedVersion: 3
+      time: 0.99812305
+      value: 0.6268896
+      inSlope: 14.412713
+      outSlope: 14.412713
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.16643085
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0.1608544
+      outSlope: 0.1608544
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.082976066
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  heightCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0.00047125353
+      value: 1.0018501
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 136
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.81846386
+      value: 0.751087
+      inSlope: -0.8436504
+      outSlope: -0.8436504
+      tangentMode: 136
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.95004714
+      value: 0.20074005
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 136
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.9561154
+      value: 0.71529925
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 136
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: -0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 136
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  ballSpinCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0.9059987
+      outSlope: 0.9059987
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.06738926
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &1342489607
 GameObject:
   m_ObjectHideFlags: 0
@@ -1731,6 +1871,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RouletteController
   debugMode: 1
   rouletteWheel: {fileID: 2144826762}
+  rouletteBall: {fileID: 1295973922}
   spinButton: {fileID: 723847491}
   resultText: {fileID: 376698146}
   deterministicInput: {fileID: 1982620537}
@@ -2337,7 +2478,34 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  spinDuration: 4
+  containerSpinCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 2
+      outSlope: 2
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0.30994764
+      outSlope: 0.30994764
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.02686143
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  containerSpinRandomMin: 1920
+  containerSpinRandomMax: 2280
+  spinDuration: 8
+  containerExtraSpinDuration: 3
   minExtraRotations: 4
   maxExtraRotations: 6
   currentIndex: -2
