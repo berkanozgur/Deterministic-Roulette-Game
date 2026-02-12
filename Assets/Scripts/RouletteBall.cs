@@ -1,5 +1,5 @@
 /*
- * Deterministic Roulette Game - Ball Component
+ * Deterministic Roulette Game
  * 
  * Author Berkan Özgür 
  * 
