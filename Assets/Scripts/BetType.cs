@@ -1,5 +1,5 @@
 /*
- * Deterministic Roulette Game - Bet Types
+ * Deterministic Roulette Game
  * 
  * Author Berkan Özgür
  * 

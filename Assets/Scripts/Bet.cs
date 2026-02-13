@@ -19,6 +19,8 @@ public class Bet : MonoBehaviour
     public int chipAmount;
     public int payoutRatio;
     public Vector3 chipPosition;
+    public int winAmount;
+    public bool isProcessed;
 
     public Bet(BetType type, List<BetNumber> numbers, int amount, int payout, Vector3 position)
     {
@@ -27,6 +29,8 @@ public class Bet : MonoBehaviour
         this.chipAmount = amount;
         this.payoutRatio = payout;
         this.chipPosition = position;
+        this.winAmount = 0;
+        this.isProcessed = false;
     }
 
     public bool IsWinningBet(int outcomeNumber)
@@ -38,9 +42,39 @@ public class Bet : MonoBehaviour
         }
         return false;
     }
+    public void ProcessResult(int outcomeNumber)
+    {
+        if (IsWinningBet(outcomeNumber))
+        {
+            winAmount = CalculatePayout();
+        }
+        else
+        {
+            winAmount = 0;
+        }
+        isProcessed = true;
+    }
 
     public int CalculatePayout()
     {
         return chipAmount + (chipAmount * payoutRatio);
+    }
+
+    public string GetNumbersString()
+    {
+        if (numbers.Count > 1)
+        {
+            List<string> numberStrings = new List<string>();
+            foreach (var num in numbers)
+            {
+                numberStrings.Add(num.number.ToString());
+            }
+            return string.Join(", ", numberStrings);
+        }
+        else if (numbers.Count == 1)
+        {
+            return numbers[0].number.ToString();
+        }
+        return "";
     }
 }

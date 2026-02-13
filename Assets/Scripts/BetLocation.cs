@@ -30,6 +30,10 @@ public class BetLocation : MonoBehaviour
     private Dictionary<Renderer, Material> originalMatSlot1 = new Dictionary<Renderer, Material>(); 
     private bool isHovered = false;
 
+    public BetType GetBetType() => betType;
+    public List<BetNumber> GetCoveredNumbers() => coveredNumbers;
+    public int GetPayoutRatio() => payoutRatio;
+
     void Awake()
     {
         if (chipSpawnPoint == null)

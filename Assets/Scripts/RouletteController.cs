@@ -12,6 +12,7 @@
  */
 
 using System.Collections;
+using System.Xml.Serialization;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -22,20 +23,25 @@ public class RouletteController : MonoBehaviour
 
     [SerializeField] private RouletteWheel rouletteWheel;
     [SerializeField] private RouletteBall rouletteBall;
-
+    [SerializeField] private GameObject resultMarker;
+    [SerializeField] private Vector3 resultMarkerRestPosition;
 
     [SerializeField] private Button spinButton;
     [SerializeField] private TMP_Text resultText;
+    [SerializeField] private BetLocationManager betLocationManager;
 
     [SerializeField] private TMP_InputField deterministicInput;
     [SerializeField] private Button setNumberButton;
     [SerializeField] private TMP_Text deterministicStatusText;
+
+    [SerializeField] private WinLoseEffect winLoseEffect;
 
     private bool isSpinning = false;
     [SerializeField] private int? predeterminedNumber;
 
     void Start()
     {
+        resultMarkerRestPosition = resultMarker.transform.position;
         spinButton.onClick.AddListener(OnSpinButtonPressed);
         setNumberButton.onClick.AddListener(OnSetDeterministicNumber);
 
@@ -99,8 +105,10 @@ public class RouletteController : MonoBehaviour
 
     private IEnumerator SpinSequence(int outcome)
     {
+        //Disable inputs during spin
         isSpinning = true;
         spinButton.interactable = false;
+        betLocationManager.handleInputs = false;
         resultText.text = "Spinning...";
 
         Coroutine wheelSpin = StartCoroutine(rouletteWheel.SpinToNumber(outcome));
@@ -112,13 +120,42 @@ public class RouletteController : MonoBehaviour
         // Small delay before showing result
         yield return new WaitForSeconds(0.5f);
 
+        Vector3 resultPosition = BettingManager.Instance.GetResultPosition(outcome);
+        SetResultMarker(resultPosition);
+
         string displayNumber = rouletteWheel.GetNumberDisplayString(outcome);
         resultText.text = $"Result: {displayNumber}";
         LogDebug($"Result: {displayNumber}");
 
+        int winnings = BettingManager.Instance.ProcessOutcome(outcome);
+        if (winnings > 0)
+        {
+            resultText.text += $" Won: {winnings} chips!";
+
+            winLoseEffect.PlayWinEffect(resultPosition, winnings);
+        }
+        else
+        {
+            resultText.text += " No winnings this time.";
+        }
+
         // Reset for next spin
         spinButton.interactable = true;
+        betLocationManager.handleInputs = true;
         isSpinning = false;
+    }
+
+    private void SetResultMarker(Vector3 outcomePosition)
+    {
+        LogDebug($"Setting result marker at position: {outcomePosition}");
+        resultMarker.transform.position = outcomePosition + Vector3.up * 0.1f;
+        resultMarker.SetActive(true);
+    }
+
+    private void HideResultMarker()
+    {
+        resultMarker.transform.position = Vector3.zero;
+        resultMarker.SetActive(false);
     }
 
     private void UpdateDeterministicStatus()
@@ -142,7 +179,7 @@ public class RouletteController : MonoBehaviour
         UpdateDeterministicStatus();
     }
 
-    void LogDebug(string message)
+    private void LogDebug(string message)
     {
         if (debugMode)
             Debug.Log($"[{this.name}] {message}");

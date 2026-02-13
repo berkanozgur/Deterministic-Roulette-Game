@@ -17,10 +17,12 @@ public class BetLocationManager : MonoBehaviour
     [SerializeField] private LayerMask betLocationLayer;
 
     private BetLocation currentHoveredLocation;
+    public bool handleInputs = true;
 
     void Update()
     {
-        HandleMouseInput();
+        if (handleInputs)
+            HandleMouseInput();
     }
 
     private void HandleMouseInput()
