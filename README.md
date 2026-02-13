@@ -26,6 +26,33 @@ The wheel uses a deterministic system where the outcome is pre-calculated, then 
 
 ![wheelmechanics](https://github.com/user-attachments/assets/d2f3d585-3cff-4b1a-9fbc-ef8cff592ec3)
 
+## Betting System
+
+The betting system supports all standard American roulette bet types with automatic bet location generation.
+
+**Bet Types Supported:**
+- **Inside Bets**: Straight (35:1), Split (17:1), Street (11:1), Corner (8:1), Six Line (5:1)
+- **Outside Bets**: Red/Black, Even/Odd, High/Low (1:1), Dozens (2:1), Columns (2:1), Basket (6:1)(American-specific)
+
+**Architecture:**
+- `BetLocation`: Clickable areas on the table with hover effects and collision detection
+- `BetNumber`: Represents individual numbers (including "00" as -1)
+- `Bet`: Data structure storing bet amount, covered numbers, and payout ratio
+- `BettingManager`: Singleton managing chip values, active bets, and payout calculations
+- `BetLocationManager`: Handles raycasting and mouse input using the new Input System
+
+**Automatic Generation:**
+The `BetTableGenerator` editor tool automatically creates bet locations for inside bets:
+1. Add BetTableGenerator component to an empty GameObject
+2. Configure table dimensions (cell width/height) and start position
+3. Assign materials for visual distinction between bet types
+4. Click "Generate Bet Locations" in the inspector
+5. All straight, split, corner, street, and six-line bet locations are created automatically
+
+Important notes: 
+- Outside bets (red/black, dozens, columns) are placed manually as there are fewer of them.
+- I made this tool to save some time as it places 143 inside bet locations automatically. Some may need manual adjustment if the bet table is not symmetrical (like the one in this project).
+- Careful, you might end up deleting your BetLocations permanently, as this is an editor tool. Create locations and remove the GameObject with the script from the scene. 
 
 ## Assets & Attribution
 
