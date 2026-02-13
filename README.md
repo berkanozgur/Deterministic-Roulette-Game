@@ -54,6 +54,8 @@ Important notes:
 - I made this tool to save some time as it places 143 inside bet locations automatically. Some may need manual adjustment if the bet table is not symmetrical (like the one in this project).
 - Careful, you might end up deleting your BetLocations permanently, as this is an editor tool. Create locations and remove the GameObject with the script from the scene. 
 
+<img width="1128" height="1126" alt="image" src="https://github.com/user-attachments/assets/e9ad5efe-b8f8-4d16-90db-96119328c5e6" />
+
 ## Assets & Attribution
 
 **Roulette Table Model**: ["Simple Roulette Table"](https://sketchfab.com/3d-models/simple-roulette-table-a128e643ea6149e686fe6b73ceb48ef9) by **Designed By Jonathan** is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
