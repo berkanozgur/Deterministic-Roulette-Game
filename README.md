@@ -1,6 +1,7 @@
 # Deterministic Roulette
 
 Unity game prototype for controlled roulette gameplay with deterministic outcome selection.
+[(Gameplay Sample Video)](https://youtu.be/UEiviCNBfZ4)
 
 ## Initial Setup
 
