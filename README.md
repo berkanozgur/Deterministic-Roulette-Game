@@ -7,12 +7,17 @@ Unity game prototype for controlled roulette gameplay with deterministic outcome
 - **Unity Version**: 6000.2.12f1
 - **Roulette Type**: American (38 pockets including 0 and 00)
 
-## Current Progress
+## Features
 
 - Wheel spinning animation with smooth deceleration
 - Deterministic outcome system (select next result)
-- American roulette wheel layout (0, 00, 1-36)
-- Accumulated rotation tracking across spins
+- Ball simulation with opposite-direction spinning
+- Full betting system with inside and outside bets
+- Automatic bet location generation
+- Chip management and bank persistence
+- Bet history tracking with win/loss statistics
+- Audio and visual feedback for outcomes
+- Result marker animation
 
 ## Roulette Wheel Mechanics
 
@@ -56,9 +61,52 @@ Important notes:
 
 <img width="1128" height="1126" alt="image" src="https://github.com/user-attachments/assets/e9ad5efe-b8f8-4d16-90db-96119328c5e6" />
 
+## Feedback & Effects
+
+**Visual Effects:**
+- Win particle effect
+- Tiered win sounds based on profit/even/loss wins
+- Animated result marker showing winning number
+- Chip stacking visualization on bet locations
+
+**Audio:**
+- Ball rolling sound with dynamic pitch
+- Pocket landing sound when ball settles
+- Chip placement sound
+- Tiered celebration sounds for different win amounts
+
+## Architecture
+
+**Core Scripts:**
+- `RouletteWheel.cs` - Wheel spinning mechanics
+- `RouletteBall.cs` - Ball animation with physics simulation
+- `RouletteController.cs` - Game flow and UI management
+- `BettingManager.cs` - Bet placement, tracking, and payout processing
+- `BetLocationManager.cs` - Input handling for bet placement
+- `BetHistory.cs` - Persistent bet tracking and statistics
+- `WinLoseEffect.cs` - Visual and audio feedback for results
+
+**Editor Tools:**
+- `BetTableGenerator.cs` - Automated bet location generation
+- `BetTableGeneratorEditor.cs` - Custom inspector for generation tool
+
 ## Assets & Attribution
 
-**Roulette Table Model**: ["Simple Roulette Table"](https://sketchfab.com/3d-models/simple-roulette-table-a128e643ea6149e686fe6b73ceb48ef9) by **Designed By Jonathan** is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+### 3D Models
+- **Roulette Table Model**: ["Simple Roulette Table"](https://sketchfab.com/3d-models/simple-roulette-table-a128e643ea6149e686fe6b73ceb48ef9) from Sketchfab
+- **Dolly Model**: ["Pawn"](https://sketchfab.com/3d-models/pawn-432f996dec844209bb2c8497404c8eef) from Sketchfab
+
+### Audio
+- **Chip Handling Sound**: ["Short handling of poker chips 3"](https://www.zapsplat.com/music/short-handling-of-poker-chips-3/) from Zapsplat
+- **Win Sound (Tier 2)**: ["Game sound orchestra complete or finish"](https://www.zapsplat.com/music/game-sound-orchestra-complete-or-finish/) from Zapsplat
+- **Win Sound (Tier 3)**: ["Game sound orchestra win or complete"](https://www.zapsplat.com/music/game-sound-orchestra-win-or-complete/) from Zapsplat
+- **Ball Rolling Sound**: ["Marble rolling"](https://freesound.org/people/YleArkisto/sounds/280200/) by YleArkisto from Freesound.org
+
+### UI & VFX
+- **UI Sprites**: ["Sleek Essential UI Pack"](https://assetstore.unity.com/packages/2d/gui/icons/sleek-essential-ui-pack-170650) from Unity Asset Store
+- **Confetti Visuals**: ["Hyper Casual FX"](https://assetstore.unity.com/packages/vfx/particles/hyper-casual-fx-200333) from Unity Asset Store
+
+All assets are used in accordance with their respective licenses.
 
 ## Author
 
