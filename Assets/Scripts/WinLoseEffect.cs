@@ -10,8 +10,10 @@ using UnityEngine;
 
 public class WinLoseEffect : MonoBehaviour
 {
-    [Header("Particle Effects")]
+    [Header("Particle Effect")]
     [SerializeField] private ParticleSystem winParticles;
+    [SerializeField] private Transform particleParent;
+    [SerializeField] private float particleDuration;
 
     [Header("Audio")]
     [SerializeField] private AudioSource audioSource;
@@ -19,27 +21,32 @@ public class WinLoseEffect : MonoBehaviour
     [SerializeField] private AudioClip winSound_t2;
     [SerializeField] private AudioClip winSound_t3;
 
-
-    public void PlayWinEffect(Vector3 position, int amount)
+    public enum OutcomeTier
+    {
+        winWithLose,
+        even,
+        win
+    }
+    public void PlayWinEffect(Vector3 position, OutcomeTier tier)
     {
         // Spawn and play particles
         if (winParticles != null)
         {
-            ParticleSystem instance = Instantiate(winParticles, position, Quaternion.identity);
+            ParticleSystem instance = Instantiate(winParticles, particleParent);
             instance.Play();
-            Destroy(instance.gameObject, instance.main.duration + instance.main.startLifetime.constantMax);
+            Destroy(instance.gameObject, particleDuration);
         }
 
         AudioClip winSound;
-        switch (amount)
+        switch (tier)
         {
-            case <50:
+            case OutcomeTier.winWithLose:
                 winSound = winSound_t1;
                 break;
-            case <100:
+            case OutcomeTier.even:
                 winSound = winSound_t2;
                 break;
-            case >100:
+            case OutcomeTier.win:
                 winSound = winSound_t3;
                 break;
             default:

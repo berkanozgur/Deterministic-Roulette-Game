@@ -7,9 +7,6 @@
  * The ball spins counter-clockwise around the rim, then settles at 12 o'clock position.
  * The parent container rotation provides the visual randomness.
  * 
- * ToDo
- * Im not happy with the ball bounce yet, it needs tweaking and maybe some sound effects.
- * Add summaries to methods
  * 
  */
 using System.Collections;
@@ -19,9 +16,11 @@ public class RouletteBall : MonoBehaviour
 {
     [SerializeField] private bool debugMode;
 
+    [Header("Roulette Elements")]
     [SerializeField] private Transform ballTransform;
     [SerializeField] private Transform wheelCenter;
 
+    [Header("Spin Settings")]
     [SerializeField] private float rimRadius = 2.5f;
     [SerializeField] private float pocketRadius = 1.8f;
     [SerializeField] private float ballHeight = 0.2f;
@@ -31,14 +30,31 @@ public class RouletteBall : MonoBehaviour
     [SerializeField] private int minBallRotations = 6;
     [SerializeField] private int maxBallRotations = 9;
 
+    [Header("Animation Curves")]
     //Curves to control the animation of the ball, its easier to test and tweak the animation with curves rather than hardcoding values in code.s
+    [Tooltip("Radius change over time to simulate ball placing in the pocket")]
     [SerializeField] private AnimationCurve radiusCurve; //Ball should start at the rim and starts spinning inward
+    [Tooltip("Height change over time to simulate height difference from rim to pocket. (Can also be used for bounce)")]
     [SerializeField] private AnimationCurve heightCurve; //Ball bounce etc. 
     [SerializeField] private AnimationCurve ballSpinCurve; //Ball should slow down at the end.
+    [Tooltip("The pitch decrease over time to simulate ball spinning speed decrease")]
+    [SerializeField] private AnimationCurve pitchCurve; //Slow decrease at first, then faster decrease at the end to simulate ball losing speed.
+
+    [Header("Audio")]
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip ballRolling;
+    [SerializeField] private AudioClip ballInPocket;
+    [SerializeField] private float startPitch = 1.0f;
+    [SerializeField] private float endPitch = 0.7f;
 
     private const float LANDING_ANGLE = 0f;
 
-
+    /// <summary>
+    /// Spin the ball around the rim counter-clockwise, then settle it at 12 o'clock position. 
+    /// The spin is controlled by animation curves for a smooth and visually appealing effect. 
+    /// The ball's position is updated in local space relative to the wheel center, allowing for easy adjustments to the animation. 
+    /// </summary>
+    /// <returns></returns>
     public IEnumerator Spin()
     {
         const float START_ANGLE = 0f;
@@ -51,7 +67,10 @@ public class RouletteBall : MonoBehaviour
         LogDebug($"Ball spinning {ballRotations} full rotations counter-clockwise");
         LogDebug($"Starting at {START_ANGLE}°, ending at {END_ANGLE}°");
 
+        PlayAudio(true, ballRolling);
+
         float elapsedTime = 0f;
+        bool pocketSoundPlayed = false;
 
         while (elapsedTime < spinDuration)
         {
@@ -79,6 +98,19 @@ public class RouletteBall : MonoBehaviour
 
             ballTransform.localPosition = localPosition;
 
+            if (audioSource != null)
+            {
+                float pitchCurveValue = pitchCurve != null ? pitchCurve.Evaluate(t) : t;
+                audioSource.pitch = Mathf.Lerp(startPitch, endPitch, pitchCurveValue);
+            }
+
+            if (t >= 0.95f && !pocketSoundPlayed)
+            {
+                // Stop spin sound and play pocket sound
+                PlayAudio(false, ballInPocket);
+                pocketSoundPlayed = true;
+            }
+
             yield return null;
         }
 
@@ -90,47 +122,38 @@ public class RouletteBall : MonoBehaviour
 
         ballTransform.localPosition = finalPosition;
 
-        yield return SettleInPocket(); //??
-         
+        // Reset pitch to normal
+        if (audioSource != null)
+            audioSource.pitch = 1.0f;
+
         LogDebug($"Ball landed at 12 o'clock position: {finalPosition}");
     }
 
     /// <summary>
-    /// This has no effect just leaving it here for future improvements, maybe some small random drift in the pocket or a bounce sound effect.
+    /// Manage audio playback for the ball. Looping for spinning and one shot for landing.
     /// </summary>
-    /// <returns></returns>
-    private IEnumerator SettleInPocket()
+    /// <param name="isLooping"></param>
+    /// <param name="clip"></param>
+    private void PlayAudio(bool isLooping, AudioClip clip)
     {
-        float elapsedTime = 0f;
-        Vector3 targetPosition = new Vector3(0f, 0.05f, pocketRadius);
-
-        float driftRadius = 0.15f; 
-        float driftAngle = 30f;
-
-        while (elapsedTime < settlingDuration)
+        if (audioSource == null || clip == null)
         {
-            elapsedTime += Time.deltaTime;
-            float t = elapsedTime / settlingDuration;
-
-            float easeValue = 1f - Mathf.Pow(1f - t, 3f);
-            float currentDrift = driftRadius * (1f - easeValue);
-
-            // Circular motion that spirals inward
-            float currentAngle = driftAngle * (1f - easeValue);
-            float angleRad = currentAngle * Mathf.Deg2Rad;
-
-            Vector3 offset = new Vector3(
-                Mathf.Sin(angleRad) * currentDrift,
-                0f,
-                Mathf.Cos(angleRad) * currentDrift
-            );
-
-            ballTransform.localPosition = targetPosition + offset;
-
-            yield return null;
+            LogDebug("AudioSource or AudioClip is missing, cannot play audio.");
+            return;
         }
 
-        ballTransform.localPosition = targetPosition;
+        audioSource.Stop();
+        if (isLooping)
+        {
+            audioSource.clip = clip;
+            audioSource.loop = true;
+            audioSource.Play();
+        }
+        else
+        {
+            audioSource.loop = false;
+            audioSource.PlayOneShot(clip);
+        }
     }
     void LogDebug(string message)
     {

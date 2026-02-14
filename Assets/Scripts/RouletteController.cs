@@ -5,14 +5,10 @@
  * 
  * This script manages UI connections and user interactions.
  * 
- * Todo: 
- * Add result tracking and statistics.
- * Add summaries to methods
  * 
  */
 
 using System.Collections;
-using System.Xml.Serialization;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -21,23 +17,34 @@ public class RouletteController : MonoBehaviour
 {
     [SerializeField] private bool debugMode = false;
 
+    [Header("Roulette Elements")]
     [SerializeField] private RouletteWheel rouletteWheel;
     [SerializeField] private RouletteBall rouletteBall;
     [SerializeField] private GameObject resultMarker;
     [SerializeField] private Vector3 resultMarkerRestPosition;
 
+    [Header("UI Components")]
     [SerializeField] private Button spinButton;
     [SerializeField] private TMP_Text resultText;
     [SerializeField] private BetLocationManager betLocationManager;
-
     [SerializeField] private TMP_InputField deterministicInput;
     [SerializeField] private Button setNumberButton;
     [SerializeField] private TMP_Text deterministicStatusText;
+    [SerializeField] private Color winResultColor = Color.green;
+    [SerializeField] private Color loseResultColor = Color.red;
+    [SerializeField] private Color defaultResultColor = Color.white;
+
+    [Header("Result Marker Animation")]
+    [SerializeField] private float markerAnimationDuration = 0.5f;
+    [SerializeField] private AnimationCurve markerMoveCurve; // Optional: for easing
+    [SerializeField] private float markerHoverHeight = 1.6f;
+
+    private Coroutine currentMarkerAnimation;
 
     [SerializeField] private WinLoseEffect winLoseEffect;
 
     private bool isSpinning = false;
-    [SerializeField] private int? predeterminedNumber;
+    private int? predeterminedNumber = null;
 
     void Start()
     {
@@ -55,7 +62,7 @@ public class RouletteController : MonoBehaviour
             LogDebug("Already spinning, ignoring input.");
             return;
         }
-
+        HideResultMarker();
 
         int outcome;
         if (predeterminedNumber.HasValue)
@@ -123,21 +130,8 @@ public class RouletteController : MonoBehaviour
         Vector3 resultPosition = BettingManager.Instance.GetResultPosition(outcome);
         SetResultMarker(resultPosition);
 
-        string displayNumber = rouletteWheel.GetNumberDisplayString(outcome);
-        resultText.text = $"Result: {displayNumber}";
-        LogDebug($"Result: {displayNumber}");
-
-        int winnings = BettingManager.Instance.ProcessOutcome(outcome);
-        if (winnings > 0)
-        {
-            resultText.text += $" Won: {winnings} chips!";
-
-            winLoseEffect.PlayWinEffect(resultPosition, winnings);
-        }
-        else
-        {
-            resultText.text += " No winnings this time.";
-        }
+        bool hasActiveBet = BettingManager.Instance.HasActiveBets();
+        SetResultText(rouletteWheel.GetNumberDisplayString(outcome), BettingManager.Instance.GetTotalBetAmount(), BettingManager.Instance.ProcessOutcome(outcome), resultPosition, hasActiveBet);
 
         // Reset for next spin
         spinButton.interactable = true;
@@ -145,18 +139,99 @@ public class RouletteController : MonoBehaviour
         isSpinning = false;
     }
 
+    private void SetResultText(string displayNumber, int betAmount, int winnings, Vector3 resultPosition, bool hasActiveBet)
+    {
+        resultText.text = $"Result: {displayNumber}";
+
+        if (winnings > 0)
+        {
+            if (betAmount < winnings) //Profit this round
+            {
+                resultText.color = winResultColor;
+                resultText.text += $"\n Bet:{betAmount}$ and Won: {winnings}$ !";
+                winLoseEffect.PlayWinEffect(resultPosition, WinLoseEffect.OutcomeTier.win);
+            }
+            else if (betAmount == winnings) //Won back bet amount, no profit
+            {
+                resultText.color = defaultResultColor;
+                resultText.text += $"\n Bet:{betAmount}$ and Won: {winnings}$";
+                winLoseEffect.PlayWinEffect(resultPosition, WinLoseEffect.OutcomeTier.even);
+            }
+            else //Won something but less than bet amount, net loss
+            {
+                resultText.color = loseResultColor;
+                resultText.text += $"\n Bet: {betAmount}$ and Won: {winnings}$";
+                winLoseEffect.PlayWinEffect(resultPosition, WinLoseEffect.OutcomeTier.winWithLose);
+            }
+        }
+        else
+        {
+            if (betAmount > 0)
+            {
+                resultText.color = loseResultColor;
+                resultText.text += $"\nYou lost {betAmount}$ bet";
+            }
+            else
+            {
+                resultText.color = defaultResultColor;
+                resultText.text += "\nPlace a bet for next spin!";
+            }
+        }
+        LogDebug($"Result: {displayNumber}");
+    }
+
+    #region DollyMarker
+
     private void SetResultMarker(Vector3 outcomePosition)
     {
         LogDebug($"Setting result marker at position: {outcomePosition}");
-        resultMarker.transform.position = outcomePosition + Vector3.up * 0.1f;
-        resultMarker.SetActive(true);
+
+        // Stop any ongoing animation
+        if (currentMarkerAnimation != null)
+            StopCoroutine(currentMarkerAnimation);
+
+        Vector3 targetPosition = outcomePosition + Vector3.up * markerHoverHeight;
+        currentMarkerAnimation = StartCoroutine(AnimateResultMarker(targetPosition));
     }
 
     private void HideResultMarker()
     {
-        resultMarker.transform.position = Vector3.zero;
-        resultMarker.SetActive(false);
+        // Stop any ongoing animation
+        if (currentMarkerAnimation != null)
+            StopCoroutine(currentMarkerAnimation);
+
+        currentMarkerAnimation = StartCoroutine(AnimateResultMarker(resultMarkerRestPosition));
     }
+
+    private IEnumerator AnimateResultMarker(Vector3 targetPosition)
+    {
+        // Make sure marker is active during animation
+        if (!resultMarker.activeSelf)
+            resultMarker.SetActive(true);
+
+        Vector3 startPosition = resultMarker.transform.position;
+        float elapsedTime = 0f;
+
+        while (elapsedTime < markerAnimationDuration)
+        {
+            elapsedTime += Time.deltaTime;
+            float t = elapsedTime / markerAnimationDuration;
+
+            // Apply curve if assigned, otherwise linear
+            float curveValue = markerMoveCurve != null ? markerMoveCurve.Evaluate(t) : t;
+
+            resultMarker.transform.position = Vector3.Lerp(startPosition, targetPosition, curveValue);
+
+            yield return null;
+        }
+
+        // Ensure exact final position
+        resultMarker.transform.position = targetPosition;
+
+        currentMarkerAnimation = null;
+    }
+    #endregion
+
 
     private void UpdateDeterministicStatus()
     {

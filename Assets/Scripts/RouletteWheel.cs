@@ -10,10 +10,6 @@
  * Notes:
  * The wheel layout is based on the American roulette configuration for now, with -1 representing "00".
  * 
- * Todo:
- * Add european variation, different pocket per angle and wheel texture.
- * Add sound effects.
- * Add summaries to methods
  * 
  */
 
@@ -60,6 +56,15 @@ public class RouletteWheel : MonoBehaviour
         return wheelLayout[index];
     }
 
+    /// <summary>
+    /// Handles the spinning of the wheel to a specific target number. 
+    /// It calculates the required rotation based on the current position and the target, adds extra rotations for visual appeal, 
+    /// and uses an animation curve to control the spin's acceleration and deceleration. 
+    /// The container also spins with a random offset to enhance the visual randomness. 
+    /// The correct number settles at 12 o'clock position in local rotation.
+    /// </summary>
+    /// <param name="targetNumber"></param>
+    /// <returns></returns>
     public IEnumerator SpinToNumber(int targetNumber)
     {
         int targetIndex = Array.IndexOf(wheelLayout, targetNumber);
@@ -127,21 +132,21 @@ public class RouletteWheel : MonoBehaviour
 
     private int CalculatePocketsToSpin(int targetIndex)
     {
-        // First spin - go directly to target
+        // First spin -> go directly to target
         if (currentIndex == -2)
         {
             LogDebug("First spin - going directly to target");
             return targetIndex;
         }
 
-        // Target is ahead (clockwise) - spin forward
+        // Target is ahead (clockwise) -> spin forward
         if (targetIndex > currentIndex)
         {
             LogDebug("Target is ahead");
             return targetIndex - currentIndex;
         }
 
-        // Target is behind - wrap around
+        // Target is behind -> wrap around
         LogDebug("Target is behind - wrapping around");
         return TOTAL_POCKETS - (currentIndex - targetIndex);
     }

@@ -1,3 +1,12 @@
+/*
+ * Deterministic Roulette Game
+ * 
+ * Author Berkan Özgür
+ * 
+ * Manages the player stats panel UI, including total spins, capital invested, profit/loss, and bet history display.
+ * 
+ */
+
 using TMPro;
 using UnityEngine;
 

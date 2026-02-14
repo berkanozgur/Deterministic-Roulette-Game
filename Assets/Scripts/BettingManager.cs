@@ -35,13 +35,19 @@ public class BettingManager : MonoBehaviour
     [SerializeField] private Transform activeBetList;
     [SerializeField] private GameObject noActiveBetMarker;
 
+    [Header("Audio")]
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip chipPlacedSound;
+
     private List<Bet> activeBets = new List<Bet>();
     private List<GameObject> chipVisuals = new List<GameObject>();
+    private Dictionary<Vector3, int> chipStackCounts = new Dictionary<Vector3, int>();
+
+    [Header("Other")]
+    [SerializeField] private float chipStackHeight = 0.05f; // Height offset per chip
 
     [SerializeField] private List<BetNumber> allNumbers;
-    [SerializeField] private BetNumber lastWinningNumber;
     [SerializeField] private BetHistory betHistory;
-
 
     public int GetTotalSpins() => totalSpins;
     public int GetCapital() => capital;
@@ -96,9 +102,15 @@ public class BettingManager : MonoBehaviour
 
         SpawnChipVisual(newBet.chipPosition);
 
+        PlayPlacementSound();
+
         LogDebug($"Placed {currentChip.value} chips on {location.GetBetType()}");
     }
-
+    private void PlayPlacementSound()
+    {
+        audioSource.pitch = Random.Range(0.9f, 1.1f); // Slight randomization for variety
+        audioSource.PlayOneShot(chipPlacedSound);
+    }
     private void AddNewBet(Bet bet)
     {
         activeBets.Add(bet);
@@ -113,9 +125,17 @@ public class BettingManager : MonoBehaviour
         UpdateTotalBetAmount();
     }
 
+    /// <summary>
+    /// Clear active bet text list.
+    /// </summary>
     private void ClearActiveBetList()
     {
-        activeBetList.GetComponentsInChildren<TMP_Text>().ToList().ForEach(text => Destroy(text.gameObject));
+        List<TMP_Text> list = activeBetList.GetComponentsInChildren<TMP_Text>().ToList();
+        foreach (var text in list)
+        {
+            if (text.gameObject != noActiveBetMarker)
+                Destroy(text.gameObject);
+        }
         noActiveBetMarker.SetActive(true);
     }
 
@@ -126,6 +146,10 @@ public class BettingManager : MonoBehaviour
         LogDebug($"Chip value set to: {chip.value}");
     }
 
+    /// <summary>
+    /// Clears all active bets.
+    /// </summary>
+    /// <param name="returnChips"> True if the chip amount will return to the balance </param>
     public void ClearBets(bool returnChips)
     {
         if (returnChips)
@@ -142,12 +166,17 @@ public class BettingManager : MonoBehaviour
             Destroy(chip);
         }
         chipVisuals.Clear();
+        chipStackCounts.Clear();
 
         UpdateTotalBetAmount();
         UpdateBankAmount();
 
         ClearActiveBetList();
         LogDebug("All bets cleared");
+    }
+    public bool HasActiveBets()
+    {
+        return activeBets.Count > 0;
     }
 
     public int ProcessOutcome(int outcomeNumber)
@@ -198,18 +227,18 @@ public class BettingManager : MonoBehaviour
 
     private void UpdateTotalBetAmount()
     {
-        if (isThereActiveBets())
+        if (IsThereActiveBet())
             totalBetAmountText.text = GetTotalBetAmount().ToString() + " $";
         else
             totalBetAmountText.text = "0 $";
     }
 
-    private bool isThereActiveBets()
+    private bool IsThereActiveBet()
     {
         return activeBets.Count > 0;
     }
 
-    private int GetTotalBetAmount()
+    public int GetTotalBetAmount()
     {
         int totalAmount = 0;
         foreach (var bet in activeBets)
@@ -221,17 +250,41 @@ public class BettingManager : MonoBehaviour
 
     private void SpawnChipVisual(Vector3 position)
     {
-        if (currentChip != null)
+        if (currentChip == null)
         {
-            GameObject chip = Instantiate(currentChip.gameObject, position, Quaternion.identity);
-            chipVisuals.Add(chip);
+            LogDebug("No chip selected, cannot spawn visual.");
+            return;
         }
+
+        // Round position to avoid floating point precision issues
+        Vector3 roundedPosition = RoundPosition(position);
+
+        // Get current stack count at this position
+        if (!chipStackCounts.ContainsKey(roundedPosition))
+        {
+            chipStackCounts[roundedPosition] = 0;
+        }
+
+        Vector3 stackedPosition = roundedPosition + Vector3.up * (chipStackCounts[roundedPosition] * chipStackHeight);
+
+        GameObject chip = Instantiate(currentChip.gameObject, stackedPosition, Quaternion.identity);
+        chipVisuals.Add(chip);
+
+        chipStackCounts[roundedPosition]++;
+    }
+
+    private Vector3 RoundPosition(Vector3 position, float precision = 0.01f)
+    {
+        return new Vector3(
+            Mathf.Round(position.x / precision) * precision,
+            Mathf.Round(position.y / precision) * precision,
+            Mathf.Round(position.z / precision) * precision
+        );
     }
 
     public Vector3 GetResultPosition(int outcome)
     {
         BetNumber winningNumber = allNumbers.Find(num => num.number == outcome);
-        lastWinningNumber = winningNumber;
         LogDebug($"Winning number: {winningNumber.number} at position {winningNumber.transform.localPosition}");
         Vector3 position = winningNumber.transform.GetChild(0).position;
         return new Vector3(position.x - 0.6f, position.y, position.z + 0.4f); //The roulette table asset pivot points are broken and not centered on the number, so we need to get the position of the child object which is a bit beetter aligned.
@@ -242,6 +295,7 @@ public class BettingManager : MonoBehaviour
         playerChipValue += amount;
         UpdateCapital(amount);
         UpdateBankAmount();
+        SaveBank();
         LogDebug($"Injecting {amount} chips for testing.");
     }
     #region BetHistory
